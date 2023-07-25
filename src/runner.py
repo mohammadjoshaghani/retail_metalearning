@@ -26,7 +26,7 @@ class Runner():
         meta_features = self.get_mfeatures()
         pipeline = MetaLearning(method='averaging', loss='mse')
         pipeline.add_metalearner(self.clf)# done
-        predictions = self.load_predictions()[:20,:,:]   # done
+        predictions = self.load_predictions()   # done
         if self.train_clf:
             labels = pipeline.generate_labels(self.x_true, predictions)
             labels[0:8]=[i for i in range(8)]
