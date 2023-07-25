@@ -80,7 +80,7 @@ def concat_slots(fist_slot, last_slot):
     dataset = np.concatenate(dataset,axis=0)
     d_troch = torch.Tensor(dataset)
     d_troch_normalized = normalize(d_troch)    
-    return dataset[:20,:,:] , d_troch_normalized[:20,:,:], catg[:20,:] #np.array , torch.array, np.array
+    return dataset , d_troch_normalized[:20,:,:], catg #np.array , torch.array, np.array
 
 def mode_indx(mode):
     if mode == "train":
