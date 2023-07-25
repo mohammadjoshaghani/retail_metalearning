@@ -327,6 +327,8 @@ class Encoder_Decoder_TCN(nn.Module):
             int: size of the latant dimension
         """
         x=torch.randn(1, input_size, input_length)
+        device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        x = x.to(device)
         encode = self._encoder(x) 
         return [encode.shape[1], encode.shape[2]]
       
