@@ -55,7 +55,7 @@ sweep_configs = {
 }
 
 sweep_id = wandb.sweep(sweep_configs, project=f"FH{FH}_{ExpId}")
-wandb.agent(sweep_id=sweep_id, function=optimizer.objective, count=1)
+wandb.agent(sweep_id=sweep_id, function=optimizer.objective, count=5)
 
 print(f"\n total time: {time.time()-s_time :.2f} seconds.")
 print("\n finish.")
