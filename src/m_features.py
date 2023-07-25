@@ -25,7 +25,7 @@ class Meta_F_Runner():
                 latent = self.model.encoder(x)
                 re_x = self.model.decoder(latent)
                 # get loss and gradients
-                loss = self.rec_loss(x.detach(), re_x)
+                loss = self.rec_loss(x, re_x)
                 loss.backward()
                 self.optim.step()
                 self.optim.zero_grad()
