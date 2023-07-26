@@ -14,8 +14,9 @@ class Meta_F_Runner():
         self.lr = lr
         self.weightDecay = weightDecay 
 
-    def train(self,x):
-        _ = self.get_dataloader(x)
+        
+    def train(self,xx):
+        _ = self.get_dataloader(xx)
         self.optim = torch.optim.Adam(list(self.model.parameters()),
                                         lr=self.lr, weight_decay= self.weightDecay)
         self.optim.zero_grad()
@@ -29,7 +30,7 @@ class Meta_F_Runner():
                 loss.backward()
                 self.optim.step()
                 self.optim.zero_grad()
-                losses.append(loss.detach())
+                losses.append(loss.detach().cpu())
             print(np.mean(losses))            
         
     def evaluate(self, x):
@@ -58,10 +59,13 @@ class Meta_Features():
     def __init__(self, device, lstm_att_features, tcn_feaures, input_length,epochs,lr,weightDecay,batchsize):
         self.input_length = input_length
         self.tcn = Encoder_Decoder_TCN(tcn_feaures, input_length,             
-                            hidden_layers=(128,64)).to(device)
-        self.lstm_att = Seq2seqAttn(tlen=input_length, in_di=lstm_att_features, first_hs=1024, second_hs=256).to(device)
+                            hidden_layers=(128,64))
+        self.lstm_att = Seq2seqAttn(tlen=input_length, in_di=lstm_att_features, first_hs=1024, second_hs=256)
         f = self._get_mlp_input_shape()
-        self.mlp = MLP(features1=1024, features2=128, features3=8).to(device)
+        self.mlp = MLP(features1=1024, features2=128, features3=8)
+        self.tcn.to(device)
+        self.lstm_att.to(device)
+        self.mlp.to(device)
         arg = (epochs,lr,weightDecay,batchsize)
         # TCN:
         self.runner_tcn = Meta_F_Runner(self.tcn,*arg)
