@@ -64,7 +64,7 @@ class Runner():
             _= self.load_models()
             self.mfeatur_model.feed_inputs(self.x_tcn, self.x_lstm_att, gradient=False)
             meta_features = self.mfeatur_model.runner_mlp.latent
-        return meta_features.reshape(meta_features.size(0),-1).detach().numpy()
+        return meta_features.reshape(meta_features.size(0),-1).detach().cpu().numpy()
     
     def _check_mode(self):
         # it doesn't need to train the deep auto-encoders for all self.FH's  
