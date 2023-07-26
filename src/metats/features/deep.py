@@ -3,6 +3,7 @@ import torch.nn as nn
 import numpy as np
 import warnings
 warnings.filterwarnings('ignore')
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 class LSTMEncoder(nn.Module):
   """
@@ -283,7 +284,7 @@ class Encoder_Decoder_TCN(nn.Module):
   """
   def __init__(self, input_size, input_length, hidden_layers=(128,64),
                activation=None, dropout=0.3):
-    super().__init__()
+    super(Encoder_Decoder_TCN,self).__init__()
     """
     inputs:
         input_size    : dimension of input series
@@ -302,11 +303,11 @@ class Encoder_Decoder_TCN(nn.Module):
     
     if activation == None:
       activation = nn.Tanh
-
+    
     ##    Encoder: 
     class Encoder(nn.Module):
       def __init__(self):
-        super().__init__()
+        super(Encoder,self).__init__()
         model = []
         for i in range(depth):
           dilation_size = 2 ** i
@@ -317,18 +318,16 @@ class Encoder_Decoder_TCN(nn.Module):
           model.append(nn.Dropout(dropout))
           model.append(activation())
           model.append(nn.MaxPool1d(2, padding=1, dilation=2, stride=1))  
-        self._encoder = nn.Sequential(*model)
+        self._encoder = nn.Sequential(*model).to(device)
         self.latent_size = np.prod(self._encoder_dim())
-      
+        
       def _encoder_dim(self):
         """gets endoder laten dimension
 
         Returns:
             int: size of the latant dimension
         """
-        x=torch.randn(1, input_size, input_length)
-        device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-        x = x.to(device)
+        x=torch.randn(1, input_size, input_length).to(device)
         encode = self._encoder(x) 
         return [encode.shape[1], encode.shape[2]]
       
@@ -340,7 +339,7 @@ class Encoder_Decoder_TCN(nn.Module):
     ##    Decoder:  
     class Decoder(nn.Module):
       def __init__(self):      
-        super().__init__()
+        super(Decoder,self).__init__()
         model = []
         for i in range(depth-1,-1,-1):
           dilation_size = 2 ** i
@@ -351,7 +350,7 @@ class Encoder_Decoder_TCN(nn.Module):
                                 kernel_size=kernel_size, padding='same', dilation=dilation_size))
           model.append(nn.Dropout(dropout))
           model.append(activation())
-        self._decoder = nn.Sequential(*model)
+        self._decoder = nn.Sequential(*model).to(device)
       
       def forward(self,x):
         x = x.view(x.shape[0], hidden_layers[-1], -1)
