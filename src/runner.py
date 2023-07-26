@@ -29,7 +29,7 @@ class Runner():
         predictions = self.load_predictions()   # done
         if self.train_clf:
             labels = pipeline.generate_labels(self.x_true, predictions)
-            labels[0:8]=[i for i in range(8)]
+            # labels[0:8]=[i for i in range(8)]
             assert len(set(labels))==8, f"the # of labels are not 8!"
             pipeline.meta_learner.fit(X=meta_features, y=labels)
         else:
@@ -82,14 +82,14 @@ class Runner():
             # factors
             self.x_tcn = data.x_norm[:,:48,1:5]
             # save:
-            np.save(self.path_true_d+'x_true.npy',self.x_true)
-            np.save(self.path_true_d+'x_lstm_att.npy',self.x_lstm_att.numpy())
-            np.save(self.path_true_d+f'x_tcn.npy',self.x_tcn.numpy())
+            np.save(self.path_true_d+f'x_true_{self.mode}.npy',self.x_true)
+            np.save(self.path_true_d+f'x_lstm_att_{self.mode}.npy',self.x_lstm_att.numpy())
+            np.save(self.path_true_d+f'x_tcn_{self.mode}.npy',self.x_tcn.numpy())
 
         else:    
-            self.x_true = np.load(self.path_true_d+'x_true.npy')
-            self.x_lstm_att = torch.from_numpy(np.load(self.path_true_d+'x_lstm_att.npy'))
-            self.x_tcn = torch.from_numpy(np.load(self.path_true_d+f'x_tcn.npy'))
+            self.x_true = np.load(self.path_true_d+f'x_true_{self.mode}.npy')
+            self.x_lstm_att = torch.from_numpy(np.load(self.path_true_d+f'x_lstm_att_{self.mode}.npy'))
+            self.x_tcn = torch.from_numpy(np.load(self.path_true_d+f'x_tcn_{self.mode}.npy'))
         
         # adjust x_true based on self.FH
         self.x_true = self.x_true[:,:self.FH]
@@ -162,9 +162,9 @@ class Runner():
             self.clf = pickle.load(open(self.path+f'clf_FH{self.FH}.pickle', "rb"))
 
 if __name__ == "__main__":
-    (mode,ExpId,FH,epochs,lr,weightDecay)=("train","01",1,1,0.01,0.009)
+    (mode,ExpId,FH,epochs,lr,weightDecay)=("train","01",7,1,0.01,0.009)
     arg = (mode,ExpId,FH,epochs,lr,weightDecay)
     runner = Runner(*arg)
-    preds = runner.run()
+    # preds = runner.run()
     # preds = runner.save_clf()
     # print(preds.shape)
