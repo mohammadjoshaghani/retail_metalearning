@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 class LSTMS(nn.Module):
     def __init__(self, in_di, first_hs, second_hs):
@@ -12,15 +13,15 @@ class LSTMS(nn.Module):
                                  num_layers = 1, batch_first = True)
       self.second_layer = nn.LSTM(input_size = self.first_hidden_size, hidden_size = self.second_hidden_size, 
                                   num_layers = 1, batch_first = True)
-    
+
     def forward(self, x):
       batch_size, seq_len, _ = x.size()
-      h_1 = torch.zeros(1, batch_size, self.first_hidden_size)
-      c_1 = torch.zeros(1, batch_size, self.first_hidden_size)
-      hidden_1 = (h_1, c_1)
-      lstm_out, hidden_1 = self.first_layer(x, hidden_1)
-      h_2 = torch.zeros(1, batch_size, self.second_hidden_size)
-      c_2 = torch.zeros(1, batch_size, self.second_hidden_size)
+      h_1 = torch.zeros(1, batch_size, self.first_hidden_size).to(device)
+      c_1 = torch.zeros(1, batch_size, self.first_hidden_size).to(device)
+      hidden_0 = (h_1, c_1)
+      lstm_out, hidden_1 = self.first_layer(x, hidden_0)
+      h_2 = torch.zeros(1, batch_size, self.second_hidden_size).to(device)
+      c_2 = torch.zeros(1, batch_size, self.second_hidden_size).to(device)
       hidden_2 = (h_2, c_2)
       lstm_out, hidden_2 = self.second_layer(lstm_out, hidden_2)
      
@@ -41,8 +42,8 @@ class LSTMS_Decoder(nn.Module):
     def forward(self, x, hidden_1):
         batch_size, seq_len, _ = x.size()
         lstm_out, hidden_1 = self.first_layer(x, hidden_1)
-        h_2 = torch.zeros(1, batch_size, self.second_hidden_size)
-        c_2 = torch.zeros(1, batch_size, self.second_hidden_size)
+        h_2 = torch.zeros(1, batch_size, self.second_hidden_size).to(device)
+        c_2 = torch.zeros(1, batch_size, self.second_hidden_size).to(device)
         hidden_2 = (h_2, c_2)
         lstm_out, hidden_2 = self.second_layer(lstm_out, hidden_2)
         
@@ -119,7 +120,7 @@ class DecRNN(nn.Module):
 
 class Seq2seqAttn(nn.Module):
     def __init__(self, tlen , in_di=5, first_hs=1024, second_hs=256):
-        super().__init__()
+        super(Seq2seqAttn,self).__init__()
         self.encoder_in = EncRNN(in_di, first_hs, second_hs)
         self.decoder_in = DecRNN(in_di, first_hs, second_hs)
         self.tlen = tlen
@@ -127,8 +128,7 @@ class Seq2seqAttn(nn.Module):
     def forward_lstm_att(self, srcs):
 
         enc_outs, hidden = self.encoder_in(srcs) 
-
-        dec_inputs = torch.ones_like(srcs[:,0:1,:]) 
+        dec_inputs = torch.ones_like(srcs[:,0:1,:]).to(device) 
         outs = []
         contexts=[]
 
@@ -153,8 +153,9 @@ class Seq2seqAttn(nn.Module):
      
 
 if __name__=="__main__":
-    input_x = torch.randn(3,48,5)
-    model = Seq2seqAttn(tlen=48, in_di=5, first_hs=1024, second_hs=256)
+    
+    input_x = torch.randn(3,48,5).to(device)
+    model = Seq2seqAttn(tlen=48, in_di=5, first_hs=1024, second_hs=256).to(device)
     context = model.encoder(input_x)
     out = model.decoder(context)
     print(out.shape, context.shape)
