@@ -57,13 +57,12 @@ class Runner():
     def get_mfeatures(self):
         if self.models_gradient:
             self.mfeatur_model.feed_inputs(self.x_tcn, self.x_lstm_att, gradient=True)
-            self.mfeatur_model.feed_inputs(self.x_tcn, self.x_lstm_att, gradient=False)
-            meta_features = self.mfeatur_model.runner_mlp.latent
         else:
             # load saved parameters
             _= self.load_models()
             self.mfeatur_model.feed_inputs(self.x_tcn, self.x_lstm_att, gradient=False)
-            meta_features = self.mfeatur_model.runner_mlp.latent
+        
+        meta_features = self.mfeatur_model.runner_mlp.latent
         return meta_features.reshape(meta_features.size(0),-1).detach().cpu().numpy()
     
     def _check_mode(self):

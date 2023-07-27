@@ -34,25 +34,34 @@ class Meta_F_Runner():
             print(np.mean(losses))            
         
     def evaluate(self, x):
-        latent = self.model.encoder(x)
-        re_x = self.model.decoder(latent)
-        # get loss
-        loss = self.rec_loss(re_x, x)
+        _ = self.get_dataloader(x)
+        losses=[]
+        latents=[]
+        for idx , (x,) in enumerate(self.dataLoader):
+            with torch.no_grad():
+                latent = self.model.encoder(x)
+                re_x = self.model.decoder(latent)
+                # get loss
+                loss = self.rec_loss(re_x, x)
+                latents.append(latent)
+                losses.append(loss)
+        latent = torch.cat(latents,dim=0)
+        loss = torch.cat(latents,dim=0)
         self.latent  = latent
-        self.loss = loss 
+        self.loss = torch.mean(loss) 
 
     def run(self, x, gradient):
         # if gradient=True :optimize NN parameters
         # if gradient=False: get output from NN
-        self.gradient = gradient
-        if self.gradient:
+        if gradient:
             self.train(x)
+            self.evaluate(x)
         else:
             self.evaluate(x)    
     
-    def get_dataloader(self, X_train):
-        train_dataset = TensorDataset(X_train)
-        self.dataLoader = DataLoader(train_dataset, batch_size=self.batchsize, shuffle=False)
+    def get_dataloader(self, x):
+        t = TensorDataset(x)
+        self.dataLoader = DataLoader(t, batch_size=self.batchsize, shuffle=False)
 
 
 class Meta_Features():
@@ -77,10 +86,10 @@ class Meta_Features():
     def feed_inputs(self, tcn_in, lstm_att_in, gradient):
         print("\n start tcn:")
         self.runner_tcn.run(tcn_in, gradient)
+        tcn_encoded = self.runner_tcn.latent.unsqueeze(1).repeat(1,self.input_length,1)
         print("\n start lstm_att:")
         self.runner_lstm_att.run(lstm_att_in, gradient)
-        tcn_encoded = self.tcn.encoder(tcn_in).unsqueeze(1).repeat(1,self.input_length,1)
-        lstm_att_encoded = self.lstm_att.encoder(lstm_att_in)
+        lstm_att_encoded = self.runner_lstm_att.latent
         mlp_in = torch.concat((lstm_att_encoded,tcn_encoded),dim=2).detach()
         print("\n start mlp:")
         self.runner_mlp.run(mlp_in, gradient)
