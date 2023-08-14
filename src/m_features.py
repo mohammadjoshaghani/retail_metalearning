@@ -6,14 +6,14 @@ from metats.features.deep import Encoder_Decoder_TCN
 from mlp import MLP
 
 class Meta_F_Runner():    
-    def __init__(self, model,epochs,lr,weightDecay,batchsize):
+    def __init__(self, model,epochs,lr,weightDecay,batchsize,device):
         self.epochs = epochs
         self.model = model
         self.batchsize = batchsize
         self.rec_loss = torch.nn.MSELoss()
         self.lr = lr
         self.weightDecay = weightDecay 
-
+        self.device=device
         
     def train(self,xx):
         _ = self.get_dataloader(xx)
@@ -22,7 +22,8 @@ class Meta_F_Runner():
         self.optim.zero_grad()
         for epch in range(self.epochs):
             losses = []
-            for idx , (x,) in enumerate(self.dataLoader): 
+            for idx , (x,) in enumerate(self.dataLoader):
+                x = x.to(self.device) 
                 latent = self.model.encoder(x)
                 re_x = self.model.decoder(latent)
                 # get loss and gradients
@@ -39,20 +40,22 @@ class Meta_F_Runner():
         latents=[]
         for idx , (x,) in enumerate(self.dataLoader):
             with torch.no_grad():
+                x = x.to(self.device)
                 latent = self.model.encoder(x)
                 re_x = self.model.decoder(latent)
                 # get loss
                 loss = self.rec_loss(re_x, x)
-                latents.append(latent)
-                losses.append(loss)
+                latents.append(latent.detach())
+                losses.append(loss.detach())
         latent = torch.cat(latents,dim=0)
         loss = torch.cat(latents,dim=0)
-        self.latent  = latent
+        self.latent  = latent.cpu()
         self.loss = torch.mean(loss) 
 
     def run(self, x, gradient):
         # if gradient=True :optimize NN parameters
         # if gradient=False: get output from NN
+        self.model.to(self.device)
         if gradient:
             self.train(x)
             self.evaluate(x)
@@ -71,11 +74,9 @@ class Meta_Features():
                             hidden_layers=(128,64))
         self.lstm_att = Seq2seqAttn(tlen=input_length, in_di=lstm_att_features, first_hs=1024, second_hs=256)
         f = self._get_mlp_input_shape()
-        self.mlp = MLP(features1=1024, features2=128, features3=8)
-        self.tcn.to(device)
-        self.lstm_att.to(device)
-        self.mlp.to(device)
-        arg = (epochs,lr,weightDecay,batchsize)
+        self.mlp = MLP(features1=272, features2=128, features3=8)
+
+        arg = (epochs,lr,weightDecay,batchsize,device)
         # TCN:
         self.runner_tcn = Meta_F_Runner(self.tcn,*arg)
         # LSTM_att
@@ -86,12 +87,13 @@ class Meta_Features():
     def feed_inputs(self, tcn_in, lstm_att_in, gradient):
         print("\n start tcn:")
         self.runner_tcn.run(tcn_in, gradient)
-        tcn_encoded = self.runner_tcn.latent.unsqueeze(1).repeat(1,self.input_length,1)
+        self.runner_tcn.latent = self.runner_tcn.latent.unsqueeze(1).view(tcn_in.size(0),self.input_length,-1)
+        
         print("\n start lstm_att:")
         self.runner_lstm_att.run(lstm_att_in, gradient)
-        lstm_att_encoded = self.runner_lstm_att.latent
-        mlp_in = torch.concat((lstm_att_encoded,tcn_encoded),dim=2).detach()
+        
         print("\n start mlp:")
+        mlp_in = torch.concat((self.runner_lstm_att.latent,self.runner_tcn.latent),dim=2).detach()
         self.runner_mlp.run(mlp_in, gradient)
 
     def _get_mlp_input_shape(self):
@@ -99,11 +101,11 @@ class Meta_Features():
          return channel_shape
 
 if  __name__ == '__main__':
-
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     X_tcn = torch.randn(10,48,4)
     X_lstm_att = torch.randn(10,48,1)
 
-    mfeatures = Meta_Features("cpu",X_lstm_att.size(2), X_tcn.size(2), X_tcn.size(1),3,0.06,0.03,2)
+    mfeatures = Meta_Features(device,X_lstm_att.size(2), X_tcn.size(2), X_tcn.size(1),3,0.06,0.03,2)
     # mfeatures.feed_inputs(tcn_in=X_tcn, lstm_att_in=X_lstm_att, gradient=True)
     mfeatures.feed_inputs(tcn_in=X_tcn, lstm_att_in=X_lstm_att, gradient=False)
 
