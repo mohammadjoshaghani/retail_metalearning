@@ -46,7 +46,7 @@ class Meta_F_Runner():
                 # get loss
                 loss = self.rec_loss(re_x, x)
                 latents.append(latent.detach())
-                losses.append(loss.detach())
+                losses.append(loss.detach().unsqueeze(0))
         latent = torch.cat(latents,dim=0)
         lossf = torch.cat(losses,dim=0)
         self.latent  = latent.cpu()
