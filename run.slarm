@@ -1,0 +1,26 @@
+#!/bin/bash
+
+#SBATCH --time=1-00:00:00            # time (DD-HH:MM:SS)
+##SBATCH --job-name=torch-test    # create a short name for your job
+#SBATCH --nodes=1                # node count
+##SBATCH --ntasks=1               # total number of tasks across all nodes
+##SBATCH --cpus-per-task=1        # cpu-cores per task (>1 if multi-threaded tasks)
+##SBATCH --mem=4G                 # total memory per node (4 GB per cpu-core is default)
+##SBATCH --gres=gpu:1             # number of gpus per node
+
+#SBATCH -p gtx1080
+#SBATCH --gres=gpu:4
+#SBATCH --output=./run.txt
+
+echo "welcome to the run!"
+module load cuda
+module load conda/py3-latest
+source activate mp
+export WANDB_API_KEY="your wandb key"
+python src/experiment.py
+
+echo "done!"
+
+
+##squeue -u sb5e19
+##scancel 4549312
