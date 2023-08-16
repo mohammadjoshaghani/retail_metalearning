@@ -19,7 +19,7 @@ class Runner():
         self.FH = FH#
         self._check_gpu()#
         _ = self.load_data()
-        self.batchsize = 2#
+        self.batchsize = 13#
         self.mfeatur_model = Meta_Features(self.device,self.x_lstm_att.size(2), self.x_tcn.size(2), self.x_tcn.size(1),epochs,lr,weightDecay,self.batchsize)#
         _ = self.load_clf()#
         _ = self._check_mode()
@@ -28,16 +28,16 @@ class Runner():
         meta_features = self.get_mfeatures()
         pipeline = MetaLearning(method='averaging', loss='mse')
         pipeline.add_metalearner(self.clf)# done
-        predictions = self.load_predictions()   # done
+        _ = self.load_predictions()   # done
         if self.train_clf:
-            labels = pipeline.generate_labels(self.x_true, predictions)
+            labels = pipeline.generate_labels(self.x_true, self.predictions)
             # labels[0:8]=[i for i in range(8)]
             assert len(set(labels))==8, f"the # of labels are not 8!"
             pipeline.meta_learner.fit(X=meta_features, y=labels)
         else:
             # test
             weights = pipeline.predict_generate_weights(meta_features)
-            self.final_forecast = pipeline.averaging_predictions(weights, predictions)
+            self.final_forecast = pipeline.averaging_predictions(weights, self.predictions)
         self.save_results()
     
     def save_results(self):
@@ -97,10 +97,10 @@ class Runner():
 
 
         # select random time series
-        idx = random_state.randint(0,self.x_true.size(0),int(self.x_true.size(0)/6))
-        self.x_true = self.x_true[idx,:,:]
-        self.x_lstm_att = self.x_lstm_att[idx,:,:]
-        self.x_tcn = self.x_tcn[idx,:,:]
+        self.idx = random_state.randint(0,self.x_true.shape[0],int(self.x_true.shape[0]/6))
+        self.x_true = self.x_true[self.idx,:]
+        self.x_lstm_att = self.x_lstm_att[self.idx,:,:]
+        self.x_tcn = self.x_tcn[self.idx,:,:]
 
     def _check_gpu(self):
         # run on GPU if available:
@@ -113,7 +113,7 @@ class Runner():
             predictions = self.read_predictions(ifsave=True)
         else:
             predictions = np.load(self.path_base_models+f'base_{self.mode}.npy')    
-        return predictions[:,:,:self.FH]
+        self.predictions = predictions[self.idx,:,:self.FH]
 
     def read_predictions(self,ifsave=True):
         (star,end) = mode_indx(self.mode)
@@ -171,6 +171,6 @@ if __name__ == "__main__":
     (mode,ExpId,FH,epochs,lr,weightDecay)=("train","01",7,1,0.01,0.009)
     arg = (mode,ExpId,FH,epochs,lr,weightDecay)
     runner = Runner(*arg)
-    # preds = runner.run()
+    preds = runner.run()
     # preds = runner.save_clf()
     # print(preds.shape)

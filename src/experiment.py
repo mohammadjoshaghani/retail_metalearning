@@ -47,15 +47,15 @@ sweep_configs = {
     "method": "grid",
     "metric": {"name": "valid_loss_rmse", "goal": "minimize"},
     "parameters": {
-        "epochs": {"values": [1]},
+        "epochs": {"values": [5,10,20,25]},
         "weightDecay": {"values": [0.001, 0.005, 0.009]},
         # "learning_rate": {"distribution": "uniform", "min": 0.0100, "max": 0.0400},
         "learning_rate":{"values": [0.01, 0.02, 0.03, 0.05, 0.06]},
     },
 }
 
-sweep_id = wandb.sweep(sweep_configs, project=f"FH{FH}_{ExpId}")
-wandb.agent(sweep_id=sweep_id, function=optimizer.objective, count=2)
+sweep_id = wandb.sweep(sweep_configs, project=f"Retail_M_FH{FH}_{ExpId}")
+wandb.agent(sweep_id=sweep_id, function=optimizer.objective, count=60)
 
 print(f"\n total time: {time.time()-s_time :.2f} seconds.")
 print("\n finish.")
