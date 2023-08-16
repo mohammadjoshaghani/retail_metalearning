@@ -6,6 +6,8 @@ from sklearn.ensemble import RandomForestClassifier
 from dataset.data import Dataset, mode_indx
 from m_features import Meta_Features
 from metats.pipeline import MetaLearning
+torch.manual_seed(0)
+random_state = np.random.RandomState(2023)
 
 class Runner():
     def __init__(self, mode,ExpId,FH,epochs,lr,weightDecay):
@@ -89,12 +91,17 @@ class Runner():
             self.x_true = np.load(self.path_true_d+f'x_true_{self.mode}.npy')
             self.x_lstm_att = torch.from_numpy(np.load(self.path_true_d+f'x_lstm_att_{self.mode}.npy'))
             self.x_tcn = torch.from_numpy(np.load(self.path_true_d+f'x_tcn_{self.mode}.npy'))
-        
+
         # adjust x_true based on self.FH
-        self.x_true = self.x_true[:,:self.FH]
-        # to gpu if available
-        self.x_lstm_att, self.x_tcn = self.x_lstm_att.to(self.device), self.x_tcn.to(self.device)    
-    
+        self.x_true = self.x_true[:,:self.FH]    
+
+
+        # select random time series
+        idx = random_state.randint(0,self.x_true.size(0),int(self.x_true.size(0)/6))
+        self.x_true = self.x_true[idx,:,:]
+        self.x_lstm_att = self.x_lstm_att[idx,:,:]
+        self.x_tcn = self.x_tcn[idx,:,:]
+
     def _check_gpu(self):
         # run on GPU if available:
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')

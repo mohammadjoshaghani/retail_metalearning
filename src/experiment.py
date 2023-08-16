@@ -34,7 +34,7 @@ class Optimizer:
         wandb.log({"valid_loss_rmse": valid_loss_rmse, "test_loss_rmse": test_loss_rmse, "mlp_mse":mlp_mse, "tcn_mse":tcn_mse,"lstm_att_mse":lstm_att_mse})
 
 os.environ['WANDB_SILENT']="true"
-os.environ['WANDB_MODE']="offline"
+# os.environ['WANDB_MODE']="offline"
 
 print("\nstart:\n")
 s_time = time.time()
@@ -55,7 +55,7 @@ sweep_configs = {
 }
 
 sweep_id = wandb.sweep(sweep_configs, project=f"FH{FH}_{ExpId}")
-wandb.agent(sweep_id=sweep_id, function=optimizer.objective, count=5)
+wandb.agent(sweep_id=sweep_id, function=optimizer.objective, count=2)
 
 print(f"\n total time: {time.time()-s_time :.2f} seconds.")
 print("\n finish.")
