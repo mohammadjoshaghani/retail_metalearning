@@ -48,9 +48,9 @@ class Meta_F_Runner():
                 latents.append(latent.detach())
                 losses.append(loss.detach())
         latent = torch.cat(latents,dim=0)
-        loss = torch.cat(latents,dim=0)
+        lossf = torch.cat(losses,dim=0)
         self.latent  = latent.cpu()
-        self.loss = torch.mean(loss) 
+        self.loss = torch.mean(lossf) 
 
     def run(self, x, gradient):
         # if gradient=True :optimize NN parameters
