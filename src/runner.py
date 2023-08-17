@@ -6,17 +6,20 @@ from sklearn.ensemble import RandomForestClassifier
 from dataset.data import Dataset, mode_indx
 from m_features import Meta_Features
 from metats.pipeline import MetaLearning
-torch.manual_seed(0)
+torch.manual_seed(2023)
 random_state = np.random.RandomState(2023)
 
 class Runner():
     def __init__(self, mode,ExpId,FH,epochs,lr,weightDecay):
         self.ExpId = ExpId #
         self.mode = mode
+        self.epochs=epochs
+        self.lr=lr
+        self.weightDecay=weightDecay
+        self.FH=FH
         self._init_mkdir() #
         self.path_base_models = "base_forecasters/_all_npy/"#
         self.path_true_d = "src/dataset/_true_npy/"#
-        self.FH = FH#
         self._check_gpu()#
         _ = self.load_data()
         self.batchsize = 13#
@@ -24,8 +27,8 @@ class Runner():
         _ = self.load_clf()#
         _ = self._check_mode()
         
-    def run(self):
-        meta_features = self.get_mfeatures()
+    def run(self,FH):
+        _ = self.get_mfeatures()
         pipeline = MetaLearning(method='averaging', loss='mse')
         pipeline.add_metalearner(self.clf)# done
         _ = self.load_predictions()   # done
@@ -33,16 +36,18 @@ class Runner():
             labels = pipeline.generate_labels(self.x_true, self.predictions)
             # labels[0:8]=[i for i in range(8)]
             assert len(set(labels))==8, f"the # of labels are not 8!"
-            pipeline.meta_learner.fit(X=meta_features, y=labels)
+            pipeline.meta_learner.fit(X=self.meta_features, y=labels)
         else:
             # test
-            weights = pipeline.predict_generate_weights(meta_features)
+            weights = pipeline.predict_generate_weights(self.meta_features)
             self.final_forecast = pipeline.averaging_predictions(weights, self.predictions)
         self.save_results()
     
     def save_results(self):
         if self.mode == "train":
-            self.save_models()
+            if self.FH==7:
+                self.save_models()
+                self.save_idx()
             self.save_clf()
         else:
             self.save_forecasts()
@@ -55,6 +60,9 @@ class Runner():
     def save_forecasts(self):
         np.savetxt(self.path +f'FH_{self.FH}'+f'_{self.mode}'+'.csv', self.final_forecast, delimiter=",")
         # print(self.final_forecast.shape)
+    
+    def save_idx(self):
+        np.save(self.path+f'random_idx.npy',self.idx)
 
     def get_mfeatures(self):
         if self.models_gradient:
@@ -65,7 +73,7 @@ class Runner():
             self.mfeatur_model.feed_inputs(self.x_tcn, self.x_lstm_att, gradient=False)
         
         meta_features = self.mfeatur_model.runner_mlp.latent
-        return meta_features.reshape(meta_features.size(0),-1).detach().cpu().numpy()
+        self.meta_features = meta_features.reshape(meta_features.size(0),-1).detach().cpu().numpy()
     
     def _check_mode(self):
         # it doesn't need to train the deep auto-encoders for all self.FH's  
@@ -94,7 +102,6 @@ class Runner():
 
         # adjust x_true based on self.FH
         self.x_true = self.x_true[:,:self.FH]    
-
 
         # select random time series
         self.idx = random_state.randint(0,self.x_true.shape[0],int(self.x_true.shape[0]/6))
@@ -145,12 +152,12 @@ class Runner():
         __root_path = os.getcwd()
         path = os.path.join(__root_path,'results/')
         path += 'ExpId_'+str(self.ExpId) + '/'
-        path += 'tcn_4_1'+ '_' 
-        path += 'lstm_1024_256'+ '_' 
-        path += 'mlp_128_8'+ '_' 
-        # path += 'WD_'+str(self.weightDecay)+'_'
-        # path += 'lr_'+str(self.lr) + '_'
-        # path += 'epochs_'+str(self.epochs)+ '_'
+        # path += 'tcn_4_1'+ '_' 
+        # path += 'lstm_1024_256'+ '_' 
+        # path += 'mlp_128_8'+ '_' 
+        path += 'epochs_'+str(self.epochs)+ '_'
+        path += 'WD_'+str(self.weightDecay)+'_'
+        path += 'lr_'+str(self.lr)
         path += '/'
         if not os.path.exists(path):
             os.makedirs(path)
