@@ -18,7 +18,7 @@ class Optimizer:
             for mode in ['train', 'valid', 'test']:
                 self.runner = Runner(mode,self.ExpId,FH,epochs,lr,weightDecay)
                 print(f"\n### start {mode} phase for wd_{weightDecay}_lr_{lr}_epochs_{epochs}:\n")
-                self.runner.run(FH)
+                self.runner.run()
                 if mode !='train':
                     # save loss for each mode
                     modes_loss_rmse[mode] = self.runner.rmse           

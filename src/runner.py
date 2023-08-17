@@ -18,7 +18,7 @@ class Runner():
         self.weightDecay=weightDecay
         self.FH=FH
         self._init_mkdir() #
-        self.path_base_models = "base_forecasters/_all_npy/"#
+        self.path_base_models = f"base_forecasters/{self.FH}/_all_npy/"#
         self.path_true_d = "src/dataset/_true_npy/"#
         self._check_gpu()#
         _ = self.load_data()
@@ -27,7 +27,7 @@ class Runner():
         _ = self.load_clf()#
         _ = self._check_mode()
         
-    def run(self,FH):
+    def run(self):
         _ = self.get_mfeatures()
         pipeline = MetaLearning(method='averaging', loss='mse')
         pipeline.add_metalearner(self.clf)# done
@@ -101,7 +101,7 @@ class Runner():
             self.x_tcn = torch.from_numpy(np.load(self.path_true_d+f'x_tcn_{self.mode}.npy'))
 
         # adjust x_true based on self.FH
-        self.x_true = self.x_true[:,:self.FH]    
+        self.x_true = self.x_true[:,-self.FH:]    
 
         # select random time series
         self.idx = random_state.randint(0,self.x_true.shape[0],int(self.x_true.shape[0]/6))
@@ -120,16 +120,16 @@ class Runner():
             predictions = self.read_predictions(ifsave=True)
         else:
             predictions = np.load(self.path_base_models+f'base_{self.mode}.npy')    
-        self.predictions = predictions[self.idx,:,:self.FH]
+        self.predictions = predictions[self.idx,:,:]
 
     def read_predictions(self,ifsave=True):
-        (star,end) = mode_indx(self.mode)
-        models = [m for m in os.listdir('base_forecasters') if m!='_all_npy']
+        (start,end) = mode_indx(self.mode)
+        models = [m for m in os.listdir(f'base_forecasters/{self.FH}') if m!='_all_npy']
         slot_i = []
         for i in range(start,end):    
             base_is = []
             for model in models:
-                base_i = np.genfromtxt(f'base_forecasters\{model}\{model}_{i}.csv', delimiter=',')[1:,1:]
+                base_i = np.genfromtxt(f'base_forecasters\{self.FH}\{model}\{model}_{i}.csv', delimiter=',')[1:,1:]
                 base_is.append(np.expand_dims(base_i,axis=1))
             is_model = np.concatenate(base_is, axis=1)   
             slot_i.append(is_model)
@@ -178,6 +178,6 @@ if __name__ == "__main__":
     (mode,ExpId,FH,epochs,lr,weightDecay)=("train","01",7,1,0.01,0.009)
     arg = (mode,ExpId,FH,epochs,lr,weightDecay)
     runner = Runner(*arg)
-    preds = runner.run()
+    _ = runner.run()
     # preds = runner.save_clf()
     # print(preds.shape)
