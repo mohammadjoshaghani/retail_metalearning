@@ -53,7 +53,7 @@ sweep_configs = {
 }
 
 sweep_id = wandb.sweep(sweep_configs, project=f"Retail_M_{ExpId}_colab")
-wandb.agent(sweep_id=sweep_id, function=optimizer.objective, count=45)
+wandb.agent(sweep_id=sweep_id, function=optimizer.objective, count=15)
 
 print(f"\n total time: {time.time()-s_time :.2f} seconds.")
 print("\n finish.")
