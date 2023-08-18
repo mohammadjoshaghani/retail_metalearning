@@ -97,8 +97,8 @@ class Runner():
 
         else:    
             self.x_true = np.load(self.path_true_d+f'x_true_{self.mode}.npy')
-            self.x_lstm_att = torch.from_numpy(np.load(self.path_true_d+f'x_lstm_att_{self.mode}.npy'))
-            self.x_tcn = torch.from_numpy(np.load(self.path_true_d+f'x_tcn_{self.mode}.npy'))
+            self.x_tcn = torch.from_numpy(np.load(self.path_true_d+f'x_lstm_att_{self.mode}.npy'))
+            self.x_lstm_att = torch.from_numpy(np.load(self.path_true_d+f'x_tcn_{self.mode}.npy'))
 
         # adjust x_true based on self.FH
         self.x_true = self.x_true[:,-self.FH:]    
