@@ -45,7 +45,7 @@ sweep_configs = {
     "method": "grid",
     "metric": {"name": "valid_loss_rmse", "goal": "minimize"},
     "parameters": {
-        "epochs": {"values": [5,10,15]},
+        "epochs": {"values": [5]},
         "weightDecay": {"values": [0.001, 0.005, 0.009]},
         # "learning_rate": {"distribution": "uniform", "min": 0.0100, "max": 0.0400},
         "learning_rate":{"values": [0.01, 0.02, 0.03, 0.05, 0.06]},
