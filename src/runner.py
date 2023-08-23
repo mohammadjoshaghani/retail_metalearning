@@ -47,11 +47,13 @@ class Runner():
         if self.mode == "train":
             if self.FH==7:
                 self.save_models()
-                self.save_idx()
             self.save_clf()
         else:
             self.save_forecasts()
-            self.call_rmse()    
+            self.call_rmse()
+        
+        if self.FH==7:
+            self.save_idx()        
     
     def call_rmse(self):
             mse = np.square(np.subtract(self.x_true,self.final_forecast)).mean() 
@@ -62,7 +64,7 @@ class Runner():
         # print(self.final_forecast.shape)
     
     def save_idx(self):
-        np.save(self.path+f'random_idx.npy',self.idx)
+        np.save(self.path+f'random_idx_{self.mode}.npy',self.idx)
 
     def get_mfeatures(self):
         if self.models_gradient:
