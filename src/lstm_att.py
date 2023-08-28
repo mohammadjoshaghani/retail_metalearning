@@ -53,8 +53,7 @@ class LSTMS_Decoder(nn.Module):
 class EncRNN(nn.Module):
     def __init__(self, in_di, first_hs, second_hs, dout=0.3):
         super(EncRNN, self).__init__()
-        self.first_hs=256
-        self.rnn = LSTMS(in_di, self.first_hs, second_hs)
+        self.rnn = LSTMS(in_di, first_hs, second_hs)
         self.dropout = nn.Dropout(dout)
 
     def forward(self, inputs):
@@ -100,8 +99,8 @@ class DecRNN(nn.Module):
     def __init__(self, in_di, first_hs, second_hs, dout=0.3, attn='dot'):
         super(DecRNN, self).__init__()
 
-        self.rnn = LSTMS_Decoder(in_di=second_hs, first_hs=256, second_hs=256)
-        self.w = nn.Linear(512, in_di)
+        self.rnn = LSTMS_Decoder(second_hs, first_hs, second_hs)
+        self.w = nn.Linear(2*first_hs, in_di)
         self.attn = Attention(second_hs, attn)
         self.dec_input = nn.Linear(in_di, second_hs)
         self.out_projection = nn.Linear(in_di, in_di)
@@ -119,7 +118,7 @@ class DecRNN(nn.Module):
 
 
 class Seq2seqAttn(nn.Module):
-    def __init__(self, tlen , in_di=5, first_hs=1024, second_hs=256):
+    def __init__(self, tlen , in_di=5, first_hs=256, second_hs=256):
         super(Seq2seqAttn,self).__init__()
         self.encoder_in = EncRNN(in_di, first_hs, second_hs)
         self.decoder_in = DecRNN(in_di, first_hs, second_hs)
@@ -154,8 +153,8 @@ class Seq2seqAttn(nn.Module):
 
 if __name__=="__main__":
     
-    input_x = torch.randn(3,48,5).to(device)
-    model = Seq2seqAttn(tlen=48, in_di=5, first_hs=1024, second_hs=256).to(device)
+    input_x = torch.randn(4,48,5).to(device)
+    model = Seq2seqAttn(tlen=48, in_di=5, first_hs=256, second_hs=256).to(device)
     context = model.encoder(input_x)
     out = model.decoder(context)
     print(out.shape, context.shape)
