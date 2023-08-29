@@ -72,7 +72,7 @@ class Meta_Features():
         self.input_length = input_length
         self.tcn = Encoder_Decoder_TCN(tcn_feaures, input_length,             
                             hidden_layers=(128,64))
-        self.lstm_att = Seq2seqAttn(tlen=input_length, in_di=lstm_att_features, first_hs=1024, second_hs=256)
+        self.lstm_att = Seq2seqAttn(tlen=input_length, in_di=lstm_att_features, first_hs=256, second_hs=256)
         f = self._get_mlp_input_shape()
         self.mlp = MLP(features1=272, features2=128, features3=8)
 
