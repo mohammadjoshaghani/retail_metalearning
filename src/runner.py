@@ -55,8 +55,8 @@ class Runner():
         self.save_idx()        
     
     def call_rmse(self):
-            mse = np.square(np.subtract(self.x_true,self.final_forecast)).mean() 
-            self.rmse = np.sqrt(mse)
+            # mse = np.square(np.subtract(self.x_true,self.final_forecast)).mean() 
+            self.rmse = np.sqrt(np.mean(np.square(self.x_true - self.final_forecast), axis=1)).mean()
 
     def save_forecasts(self):
         np.savetxt(self.path +f'FH_{self.FH}'+f'_{self.mode}'+'.csv', self.final_forecast, delimiter=",")
