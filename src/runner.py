@@ -3,6 +3,8 @@ import pickle
 import numpy as np
 import os
 from sklearn.ensemble import RandomForestClassifier
+# if Xgboost is meta-learner:
+# from xgboost import XGBClassifier
 from dataset.data import Dataset, mode_indx
 from m_features import Meta_Features
 from metats.pipeline import MetaLearning
@@ -171,7 +173,7 @@ class Runner():
     
     def load_clf(self):
         if self.mode =="train":
-            self.clf = RandomForestClassifier()
+            self.clf = RandomForestClassifier() # XGBClassifier()
         else:
             self.clf = pickle.load(open(self.path+f'clf_FH{self.FH}.pickle', "rb"))
 
