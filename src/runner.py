@@ -22,10 +22,10 @@ class Runner:
         self.lr = lr
         self.weightDecay = weightDecay
         self.FH = FH
-        self._init_mkdir()  
+        _ = self._init_mkdir()  
         self.path_base_models = f"base_forecasters/{self.FH}/_all_npy/"  
         self.path_true_d = "src/dataset/_true_npy/"  
-        self._check_gpu()  
+        _ = self._check_gpu()  
         _ = self.load_data()
         self.batchsize = 13  
         self.mfeatur_model = Meta_Features(
@@ -56,7 +56,7 @@ class Runner:
             self.final_forecast = pipeline.averaging_predictions(
                 weights, self.predictions
             )
-        self.save_results()
+        _ = self.save_results()
 
     def save_results(self):
         if self.mode == "train":
